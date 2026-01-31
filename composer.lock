@@ -1,18 +1,41 @@
-{
-    "_readme": [
-        "This file locks the dependencies of your project to a known state",
-        "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
-        "This file is @generated automatically"
-    ],
-    "content-hash": "6f5b6f3659bbc90f85cef3502ecea84d",
-    "packages": [],
-    "packages-dev": [],
-    "aliases": [],
-    "minimum-stability": "stable",
-    "stability-flags": {},
-    "prefer-stable": false,
-    "prefer-lowest": false,
-    "platform": {},
-    "platform-dev": {},
-    "plugin-api-version": "2.9.0"
-}
+#!/bin/bash
+
+# Script to update Laravel dependencies and regenerate composer.lock
+set -e
+
+echo "🔧 Updating Laravel dependencies..."
+
+# Backup current composer.lock
+if [ -f "composer.lock" ]; then
+    cp composer.lock composer.lock.backup
+    echo "📋 Backed up composer.lock"
+fi
+
+# Clear composer cache
+composer clear-cache
+
+# Update dependencies
+echo "📦 Updating Composer packages..."
+composer update --prefer-dist --no-interaction
+
+# Optimize autoload
+echo "⚡ Optimizing autoload..."
+composer dump-autoload -o
+
+# Run Laravel optimizations
+if [ -f "artisan" ]; then
+    echo "🛠️ Running Laravel optimizations..."
+    php artisan optimize:clear
+    php artisan optimize
+    php artisan package:discover
+fi
+
+echo "✅ Dependencies updated successfully!"
+echo "📋 Changes summary:"
+composer show --latest
+
+# Compare with backup
+if [ -f "composer.lock.backup" ]; then
+    echo "📊 Differences from previous lock file:"
+    diff composer.lock composer.lock.backup || true
+fi

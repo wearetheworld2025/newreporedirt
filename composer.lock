@@ -1,0 +1,31 @@
+#!/bin/bash
+
+# Deployment script that uses composer.lock
+set -e
+
+echo "🚀 Starting deployment..."
+
+# Check if composer.lock exists
+if [ ! -f "composer.lock" ]; then
+    echo "❌ composer.lock not found! Run composer install first."
+    exit 1
+fi
+
+# Install dependencies from lock file
+echo "📦 Installing dependencies from composer.lock..."
+composer install --no-interaction --prefer-dist --optimize-autoloader --no-dev
+
+# Verify installation
+echo "🔍 Verifying dependencies..."
+composer validate
+
+# Laravel specific optimizations
+if [ -f "artisan" ]; then
+    echo "🛠️ Running Laravel optimizations..."
+    php artisan config:cache
+    php artisan route:cache
+    php artisan view:cache
+    php artisan event:cache
+fi
+
+echo "✅ Deployment ready!"
